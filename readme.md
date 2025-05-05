@@ -150,3 +150,49 @@ Example:
 async def post_request():
     return {"message": "This is a POST request"}
 ```
+
+---
+
+### 5.7 Query Parameters
+Query parameters are used to pass additional data to endpoints via the URL. In FastAPI, query parameters are defined as function arguments that are not part of the path parameters.
+
+#### How to Use Query Parameters
+- **Required Query Parameters**: These must be included in the URL.
+    Example: `/user/item?user_id=123`
+- **Optional Query Parameters**: These can be omitted from the URL. If omitted, they take the default value specified in the function signature.
+    Example: `/user/item?user_id=123&item_id=456` or `/user/item?user_id=123`
+
+#### Example
+```python
+@app.get("/user/item", description="This is a GET request for user item using query params")
+async def get_user_item(user_id: int, item_id: int = None):
+    # user_id is a required query parameter
+    # item_id is an optional query parameter
+    if item_id:
+        return {"message": f"User ID: {user_id}, Item ID: {item_id}"}
+    return {"message": f"User ID: {user_id}"}
+```
+
+#### Key Points:
+1. **Required Query Parameter**:
+    ```python
+    async def get_user_item(user_id: int):
+        return {"message": f"User ID: {user_id}"}
+    ```
+    URL: `/user/item?user_id=123`
+
+2. **Optional Query Parameter**:
+    ```python
+    async def get_user_item(user_id: int, item_id: int = None):
+        if item_id:
+            return {"message": f"User ID: {user_id}, Item ID: {item_id}"}
+        return {"message": f"User ID: {user_id}"}
+    ```
+    URL: `/user/item?user_id=123&item_id=456` or `/user/item?user_id=123`
+
+3. **Default Value for Query Parameter**:
+    ```python
+    async def get_user_item(user_id: int, item_id: int = 0):
+        return {"message": f"User ID: {user_id}, Item ID: {item_id}"}
+    ```
+    URL: `/user/item?user_id=123` (item_id defaults to `0`)

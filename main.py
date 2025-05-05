@@ -27,6 +27,15 @@ async def get_current_user():
     # if a static and dynamic path are used together, the static path should be defined first
     return {"message": "This is a GET request for current user"}
 
+@app.get("/user/item", description="This is a GET request for user item using query params")
+async def get_user_item(user_id: int, item_id: int=None):
+    # This is a GET request for user item using query params
+    # user_id is an integer
+    # item_id is an optional integer
+    if item_id:
+        return {"message": f"User ID: {user_id}, Item ID: {item_id}"}
+    return {"message": f"User ID: {user_id}"}
+
 @app.get("/user/{user_id}", description="This is a GET request for a specific item")
 async def get_item(user_id):
     # This is a GET request for a specific item

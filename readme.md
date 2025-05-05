@@ -66,3 +66,87 @@ This repository documents my journey of learning FastAPI. Below are the steps I 
     ```bash
     uvicorn main:app --workers 4
     ```
+
+## 5. Learning FastAPI Concepts Through Endpoints
+
+### 5.1 Using `async` Functions
+FastAPI endpoints are defined as `async` functions to take advantage of Python's asynchronous capabilities. This allows the server to handle multiple requests concurrently, improving performance for I/O-bound operations like database queries or external API calls.
+
+Example:
+```python
+@app.get("/")
+async def get_request():
+    return {"message": "This is a GET request"}
+```
+
+### 5.2 Adding Descriptions to Endpoints
+The `description` parameter in route decorators helps document the purpose of each endpoint. This information is displayed in the interactive API documentation (Swagger UI and ReDoc).
+
+Example:
+```python
+@app.get("/", description="This is a GET request")
+async def get_request():
+    return {"message": "This is a GET request"}
+```
+
+### 5.3 Using Path Parameters
+Path parameters allow dynamic values to be passed in the URL. FastAPI automatically validates and converts these parameters based on their type annotations.
+
+Example:
+```python
+@app.get("/user/{user_id}")
+async def get_user(user_id: int):
+    return {"message": f"User ID is {user_id}"}
+```
+- `user_id` is dynamically extracted from the URL.
+- Type annotations (e.g., `int`) ensure that the parameter is validated and converted automatically.
+
+### 5.4 Handling Static and Dynamic Paths
+When defining routes, static paths (e.g., `/user/me`) should be declared before dynamic paths (e.g., `/user/{user_id}`) to avoid conflicts.
+
+Example:
+```python
+@app.get("/user/me")
+async def get_current_user():
+    return {"message": "This is a GET request for the current user"}
+
+@app.get("/user/{user_id}")
+async def get_user(user_id: int):
+    return {"message": f"User ID is {user_id}"}
+```
+
+### 5.5 Custom Logic in Endpoints
+Endpoints can include custom logic, such as checking conditions or performing calculations. For example, the `/user/adult/{age}` endpoint determines if a user is an adult based on their age.
+
+Example:
+```python
+class User:
+    def __init__(self, age: int):
+        self.age = age
+
+    def is_adult(self):
+        if self.age < 0:
+            return "Invalid age"
+        elif self.age >= 18:
+            return "User is adult"
+        return "User is not adult"
+
+@app.get("/user/adult/{age}")
+async def get_is_user_adult(age: int):
+    user = User(age)
+    return {"message": user.is_adult()}
+```
+- This demonstrates how to encapsulate logic in a class and use it within an endpoint.
+
+### 5.6 HTTP Methods
+FastAPI supports multiple HTTP methods (e.g., GET, POST, PUT). Each method is used for a specific purpose:
+- **GET**: Retrieve data.
+- **POST**: Create new data.
+- **PUT**: Update existing data.
+
+Example:
+```python
+@app.post("/")
+async def post_request():
+    return {"message": "This is a POST request"}
+```

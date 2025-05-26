@@ -19,6 +19,7 @@ This repository documents my journey of learning FastAPI. Below are the steps I 
     pip install fastapi uvicorn
     ```
 
+# Part 1: Introductions
 ## 3. New User Guide
 - **Activate the virtual environment**:
     ```bash
@@ -89,6 +90,7 @@ async def get_request():
     return {"message": "This is a GET request"}
 ```
 
+# Part 2: Using Path Parameters
 ### 5.3 Using Path Parameters
 Path parameters allow dynamic values to be passed in the URL. FastAPI automatically validates and converts these parameters based on their type annotations.
 
@@ -152,7 +154,7 @@ async def post_request():
 ```
 
 ---
-
+# Part 3: Using Query Parameters
 ### 5.7 Query Parameters
 Query parameters are used to pass additional data to endpoints via the URL. In FastAPI, query parameters are defined as function arguments that are not part of the path parameters.
 
@@ -198,7 +200,7 @@ async def get_user_item(user_id: int, item_id: int = None):
     URL: `/user/item?user_id=123` (item_id defaults to `0`)
 
 ---
-
+# Part 4:  Request Body
 ### 5.8 Working with Request Bodies Using Pydantic Models
 
 FastAPI uses Pydantic models to define and validate the structure of request bodies for endpoints, especially for POST and PUT requests. This helps ensure that the data received is well-structured and type-safe.

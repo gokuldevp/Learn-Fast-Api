@@ -196,3 +196,67 @@ async def get_user_item(user_id: int, item_id: int = None):
         return {"message": f"User ID: {user_id}, Item ID: {item_id}"}
     ```
     URL: `/user/item?user_id=123` (item_id defaults to `0`)
+
+---
+
+### 5.8 Working with Request Bodies Using Pydantic Models
+
+FastAPI uses Pydantic models to define and validate the structure of request bodies for endpoints, especially for POST and PUT requests. This helps ensure that the data received is well-structured and type-safe.
+
+#### Defining a Pydantic Model
+
+```python
+from pydantic import BaseModel
+
+class Item(BaseModel):
+    """
+    Item model for creating an item
+
+    Attributes:
+        name (str): Name of the item
+        discription (str | None): Description of the item, optional
+        price (float): Price of the item
+        tax (float | None): Tax on the item, optional
+    """
+    name: str
+    discription: str | None = None
+    price: float
+    tax: float | None = None
+```
+
+#### Creating an Item
+
+- Use the model as a parameter in your endpoint to automatically parse and validate the incoming JSON.
+- You can add logic to process or enrich the data before returning a response.
+
+```python
+@app.post("/create_item", description="This is a POST request to create an item")
+async def create_item(item: Item):
+    # item is a Pydantic model
+    item_dict = item.model_dump()
+    item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+    return {"item": item_dict, "message": "Item created successfully"}
+```
+
+#### Updating an Item
+
+- You can combine path parameters, request bodies, and query parameters in a single endpoint.
+
+```python
+@app.put("/update_item/{item_id}", description="This is a PUT request to update an item")
+async def update_item(item_id: int, item: Item, item_type: str = "Cloths"):
+    # item_id is an integer (from path)
+    # item is a Pydantic model (from request body)
+    # item_type is a string with default value "Cloths" (from query)
+    item_dict = item.model_dump()
+    item_dict['type'] = item_type
+    item_dict['item_id'] = item_id
+    item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+    return {"item": item_dict, "message": "Item updated successfully"}
+```
+
+**Key Points:**
+- Use Pydantic models to define the expected structure for request bodies.
+- FastAPI automatically validates and parses the incoming data.
+- You can combine path, query, and body parameters in your endpoints.
+- Optional fields can be specified with `| None` and default values.

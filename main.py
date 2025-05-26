@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -67,3 +68,36 @@ async def get_is_user_adult(age: int):
     # age is an integer
     user = User(age)
     return {"message": user.is_adult()}
+
+class Item(BaseModel):
+    """Item model for creating an item
+    Attributes:
+        name (str): Name of the item
+        discription (str | None): Description of the item, optional
+        price (float): Price of the item
+        tax (float | None): Tax on the item, optional
+    """
+    name: str
+    discription: str | None = None
+    price: float
+    tax: float | None = None
+
+@app.post("/create_item", description="This is a POST request to create an item")
+async def create_item(item: Item):
+    # This is a POST request to create an item
+    # item is a Pydantic model
+    item_dict = item.model_dump()
+    item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+    return {"item": item_dict, "message": "Item created successfully"}
+
+@app.put("/update_item/{item_id}", description="This is a PUT request to update an item")
+async def update_item(item_id:int, item: Item, item_type: str = "Cloths"):
+    # This is a PUT request to update an item
+    # item_id is an integer
+    # item is a Pydantic model
+    # type is a string with default value "Cloths"
+    item_dict = item.model_dump()
+    item_dict['type'] = item_type
+    item_dict['item_id'] = item_id
+    item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+    return {"item": item_dict, "message": "Item updated successfully"}

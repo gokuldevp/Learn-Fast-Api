@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Path
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -132,3 +132,12 @@ async def get_hidden_friends(friend_id: list[int] | None = Query(None, min_lengt
     # friend_id is an integer with min length 1 and max length 100
     # include_in_schema=False means this endpoint will not be included in the OpenAPI schema
     return {"message": f"Friend ID: {friend_id}"}
+
+@app.get("/friends/{friend_id}", description="This is a GET request to get a specific friend")
+async def get_friend(*,friend_id: int = Path(..., title="Friend ID", description="This is a friend ID", gt=1, le=1000), q:str):
+    # This is a GET request to get a specific friend
+    # friend_id is an integer with min value 1 and max value 1000
+    # q is a query parameter
+    # * means that all parameters after it are keyword-only arguments
+    # ... means that this parameter is required
+    return {"message": f"Friend ID: {friend_id}, Query: {q}"}

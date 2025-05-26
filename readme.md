@@ -338,3 +338,42 @@ async def get_hidden_friends(friend_id: list[int] | None = Query(
 - Use `Query` for advanced query parameter validation and documentation.
 - You can control string length, provide metadata, accept lists, and hide endpoints from docs.
 - These features help you build robust, well-documented, and user-friendly APIs.
+
+---
+
+# Part 6: Path Parameters and Numeric Validation
+
+FastAPI allows you to validate and document path parameters using the `Path` class. This enables you to enforce constraints such as minimum and maximum values, provide descriptions, and more.
+
+### 6.1 Numeric Path Parameter Validation
+
+You can use `Path` to add validation and metadata to path parameters. For example, you can specify minimum (`gt`, `ge`) and maximum (`lt`, `le`) values, add a description, and set a title.
+
+```python
+from fastapi import Path
+
+@app.get("/friends/{friend_id}", description="This is a GET request to get a specific friend")
+async def get_friend(
+    *,
+    friend_id: int = Path(
+        ...,  # Required parameter
+        title="Friend ID",
+        description="This is a friend ID",
+        gt=1,  # Greater than 1
+        le=1000  # Less than or equal to 1000
+    ),
+    q: str
+):
+    # friend_id is an integer with min value 1 and max value 1000
+    # q is a query parameter
+    # * means that all parameters after it are keyword-only arguments
+    # ... means that this parameter is required
+    return {"message": f"Friend ID: {friend_id}, Query: {q}"}
+```
+
+**Key Points:**
+- Use `Path` to add validation and documentation to path parameters.
+- `gt`, `ge`, `lt`, `le` allow you to set numeric constraints.
+- `title` and `description` improve the generated API docs.
+- `...` (Ellipsis) makes the parameter required.
+- Placing `*` in the function signature makes all following parameters keyword-only, improving clarity and flexibility.

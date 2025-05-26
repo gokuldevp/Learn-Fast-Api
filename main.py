@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -101,3 +101,34 @@ async def update_item(item_id:int, item: Item, item_type: str = "Cloths"):
     item_dict['item_id'] = item_id
     item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
     return {"item": item_dict, "message": "Item updated successfully"}
+
+@app.get("/friend", description="This is a GET request to get friends")
+async def get_friends(friend_id: str | None = Query(
+    None,
+    min_length=1,
+    max_length=100, 
+    description="Friend ID is required",
+    title="Friend ID",
+    alias="friend_id",
+    example="12345",
+    deprecated=False,
+    response_description="This is a response description for friend_id",
+    )):
+    # This is a GET request to get friend
+    # friend_id is an integer with min length 1 and max length 100
+    # The Query parameters allow for more control over the input
+    # friend_id is a string or None
+    return {"message": f"Friend ID: {friend_id}"}
+
+@app.get("/friends", description="This is a GET request to get friends list")
+async def get_friends(friend_id: list[int] | None = Query(None, min_length=1, max_length=100, description="Friend ID is required")):
+    # This is a GET request to get friends list
+    # friend_id is an integer with min length 1 and max length 100
+    return {"message": f"Friend ID: {friend_id}"}
+
+@app.get("/friends/hidden", description="This is a GET request to get hidden friends list")
+async def get_hidden_friends(friend_id: list[int] | None = Query(None, min_length=1, max_length=100, description="Friend ID is required", include_in_schema=False)):
+    # This is a GET request to get hidden friends list
+    # friend_id is an integer with min length 1 and max length 100
+    # include_in_schema=False means this endpoint will not be included in the OpenAPI schema
+    return {"message": f"Friend ID: {friend_id}"}

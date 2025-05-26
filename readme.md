@@ -19,7 +19,6 @@ This repository documents my journey of learning FastAPI. Below are the steps I 
     pip install fastapi uvicorn
     ```
 
-# Part 1: Introductions
 ## 3. New User Guide
 - **Activate the virtual environment**:
     ```bash
@@ -68,9 +67,10 @@ This repository documents my journey of learning FastAPI. Below are the steps I 
     uvicorn main:app --workers 4
     ```
 
-## 5. Learning FastAPI Concepts Through Endpoints
+# Part 1: Introductions
+## 1. Learning FastAPI Concepts Through Endpoints
 
-### 5.1 Using `async` Functions
+### 1.1 Using `async` Functions
 FastAPI endpoints are defined as `async` functions to take advantage of Python's asynchronous capabilities. This allows the server to handle multiple requests concurrently, improving performance for I/O-bound operations like database queries or external API calls.
 
 Example:
@@ -80,7 +80,7 @@ async def get_request():
     return {"message": "This is a GET request"}
 ```
 
-### 5.2 Adding Descriptions to Endpoints
+### 1.2 Adding Descriptions to Endpoints
 The `description` parameter in route decorators helps document the purpose of each endpoint. This information is displayed in the interactive API documentation (Swagger UI and ReDoc).
 
 Example:
@@ -91,7 +91,7 @@ async def get_request():
 ```
 
 # Part 2: Using Path Parameters
-### 5.3 Using Path Parameters
+### 2.1 Using Path Parameters
 Path parameters allow dynamic values to be passed in the URL. FastAPI automatically validates and converts these parameters based on their type annotations.
 
 Example:
@@ -103,7 +103,7 @@ async def get_user(user_id: int):
 - `user_id` is dynamically extracted from the URL.
 - Type annotations (e.g., `int`) ensure that the parameter is validated and converted automatically.
 
-### 5.4 Handling Static and Dynamic Paths
+### 2.2 Handling Static and Dynamic Paths
 When defining routes, static paths (e.g., `/user/me`) should be declared before dynamic paths (e.g., `/user/{user_id}`) to avoid conflicts.
 
 Example:
@@ -117,7 +117,7 @@ async def get_user(user_id: int):
     return {"message": f"User ID is {user_id}"}
 ```
 
-### 5.5 Custom Logic in Endpoints
+### 2.3 Custom Logic in Endpoints
 Endpoints can include custom logic, such as checking conditions or performing calculations. For example, the `/user/adult/{age}` endpoint determines if a user is an adult based on their age.
 
 Example:
@@ -140,7 +140,7 @@ async def get_is_user_adult(age: int):
 ```
 - This demonstrates how to encapsulate logic in a class and use it within an endpoint.
 
-### 5.6 HTTP Methods
+### 2.4 HTTP Methods
 FastAPI supports multiple HTTP methods (e.g., GET, POST, PUT). Each method is used for a specific purpose:
 - **GET**: Retrieve data.
 - **POST**: Create new data.
@@ -155,7 +155,7 @@ async def post_request():
 
 ---
 # Part 3: Using Query Parameters
-### 5.7 Query Parameters
+### 3.1 Query Parameters
 Query parameters are used to pass additional data to endpoints via the URL. In FastAPI, query parameters are defined as function arguments that are not part of the path parameters.
 
 #### How to Use Query Parameters
@@ -201,7 +201,7 @@ async def get_user_item(user_id: int, item_id: int = None):
 
 ---
 # Part 4:  Request Body
-### 5.8 Working with Request Bodies Using Pydantic Models
+### 4.1 Working with Request Bodies Using Pydantic Models
 
 FastAPI uses Pydantic models to define and validate the structure of request bodies for endpoints, especially for POST and PUT requests. This helps ensure that the data received is well-structured and type-safe.
 
@@ -262,3 +262,79 @@ async def update_item(item_id: int, item: Item, item_type: str = "Cloths"):
 - FastAPI automatically validates and parses the incoming data.
 - You can combine path, query, and body parameters in your endpoints.
 - Optional fields can be specified with `| None` and default values.
+
+---
+
+# Part 5:  Query Parameters and String Validation
+
+FastAPI provides powerful tools for validating and customizing query parameters using the `Query` class. This allows you to enforce constraints such as minimum/maximum length, provide descriptions, set aliases, mark parameters as deprecated, and more.
+
+### 5.1 String Query Parameter Validation
+
+You can use `Query` to add validation and metadata to query parameters. For example, you can specify minimum and maximum length, add a description, set a title, provide an alias, and even mark a parameter as deprecated.
+
+```python
+from fastapi import Query
+
+@app.get("/friend", description="This is a GET request to get friends")
+async def get_friends(friend_id: str | None = Query(
+    None,
+    min_length=1,
+    max_length=100, 
+    description="Friend ID is required",
+    title="Friend ID",
+    alias="friend_id",
+    example="12345",
+    deprecated=False,
+    response_description="This is a response description for friend_id",
+)):
+    # friend_id is a string or None, with length constraints and metadata
+    return {"message": f"Friend ID: {friend_id}"}
+```
+
+**Key Points:**
+- `min_length` and `max_length` enforce string length.
+- `description`, `title`, and `example` improve API documentation.
+- `alias` allows you to use a different name in the query string.
+- `deprecated` marks the parameter as deprecated in the docs.
+- `response_description` adds a description to the response in the docs.
+
+---
+
+### 5.2 List Query Parameters and Validation
+
+You can also accept lists as query parameters and apply validation to each item in the list.
+
+```python
+@app.get("/friends", description="This is a GET request to get friends list")
+async def get_friends(friend_id: list[int] | None = Query(
+    None, min_length=1, max_length=100, description="Friend ID is required"
+)):
+    # friend_id is a list of integers, with length constraints
+    return {"message": f"Friend ID: {friend_id}"}
+```
+
+- Pass multiple values in the query string: `/friends?friend_id=1&friend_id=2&friend_id=3`
+- `min_length` and `max_length` apply to each string value in the list.
+
+---
+
+### 5.3 Hiding Endpoints from OpenAPI Schema
+
+You can hide endpoints from the automatically generated OpenAPI schema by setting `include_in_schema=False` in the `Query` parameters.
+
+```python
+@app.get("/friends/hidden", description="This is a GET request to get hidden friends list")
+async def get_hidden_friends(friend_id: list[int] | None = Query(
+    None, min_length=1, max_length=100, description="Friend ID is required", include_in_schema=False
+)):
+    # This endpoint will not appear in the OpenAPI docs
+    return {"message": f"Friend ID: {friend_id}"}
+```
+
+---
+
+**Summary:**
+- Use `Query` for advanced query parameter validation and documentation.
+- You can control string length, provide metadata, accept lists, and hide endpoints from docs.
+- These features help you build robust, well-documented, and user-friendly APIs.

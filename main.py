@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path
+from fastapi import FastAPI, Query, Path, Body
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -141,3 +141,70 @@ async def get_friend(*,friend_id: int = Path(..., title="Friend ID", description
     # * means that all parameters after it are keyword-only arguments
     # ... means that this parameter is required
     return {"message": f"Friend ID: {friend_id}, Query: {q}"}
+
+
+"""
+Part 7: Body Multiple Parameters
+"""
+
+class ItemWithBody(BaseModel):
+    """Item model for creating an item with body parameters
+    Attributes:
+        name (str): Name of the item
+        discription (str | None): Description of the item, optional
+        price (float): Price of the item
+        tax (float | None): Tax on the item, optional
+    """
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+class User(BaseModel):
+    """User model for creating a user with body parameters
+    Attributes:
+        username (str): Username of the user
+        email (str): Email of the user
+    """
+    username: str
+    email: str
+
+@app.post("/create_item_with_body/{item_id}", description="This is a POST request to create an item with body parameters")
+async def create_item_with_body(
+    *,
+    item_id: int = Path(..., title="Item ID", description="This is an item ID", gt=0, le=1000),
+    item_type: str = Query(..., title="Item Type", description="This is an item type", min_length=1, max_length=50),
+    item: ItemWithBody = Body(...,embed=True),
+    user: User = Body(None),
+    importance: int = Body(...),
+    ):
+    """This is a POST request to create an item with body parameters
+    Args:
+        item_id (int): ID of the item, must be greater than 0 and less than or equal to 1000
+        item_type (str): Type of the item, must be a string with min length 1 and max length 50
+        item (ItemWithBody): Item details, must be provided in the body
+        user (User | None): User details, optional
+        importance (int): Importance level, must be provided in the body    
+    Returns:
+        dict: A dictionary containing the result of the item creation
+    """
+    result = {"item_id": item_id, "item_type": item_type}
+
+    if item:
+        item_dict = item.model_dump()
+        item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+        result['item'] = item_dict
+
+    if user:
+        user_dict = user.model_dump()
+        result['user'] = user_dict
+
+    if importance:
+        result['importance'] = importance
+    return {"result": result, "message": "Item created successfully with body parameters"}
+
+"""
+
+Part 8: Body - Field
+
+"""

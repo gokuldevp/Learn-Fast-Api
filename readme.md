@@ -377,3 +377,123 @@ async def get_friend(
 - `title` and `description` improve the generated API docs.
 - `...` (Ellipsis) makes the parameter required.
 - Placing `*` in the function signature makes all following parameters keyword-only, improving clarity and flexibility.
+
+---
+
+# Part 7: Body Multiple Parameters
+
+FastAPI allows you to receive multiple body parameters in a single request by using Pydantic models and the `Body` class. This is useful when you want to accept complex, structured data for different entities in the same endpoint, along with additional primitive values.
+
+### 7.1 Defining Multiple Body Models
+
+You can define multiple Pydantic models to represent different parts of the request body. For example:
+
+```python
+from pydantic import BaseModel
+
+class ItemWithBody(BaseModel):
+    """Item model for creating an item with body parameters
+    Attributes:
+        name (str): Name of the item
+        discription (str | None): Description of the item, optional
+        price (float): Price of the item
+        tax (float | None): Tax on the item, optional
+    """
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+class User(BaseModel):
+    """User model for creating a user with body parameters
+    Attributes:
+        username (str): Username of the user
+        email (str): Email of the user
+    """
+    username: str
+    email: str
+```
+
+### 7.2 Endpoint with Multiple Body Parameters
+
+You can combine path, query, and multiple body parameters in a single endpoint. Use `Body(...)` to explicitly declare body parameters, and `embed=True` to nest the model under its name in the request body.
+
+```python
+from fastapi import Path, Query, Body
+
+@app.post("/create_item_with_body/{item_id}", description="This is a POST request to create an item with body parameters")
+async def create_item_with_body(
+    *,
+    item_id: int = Path(..., title="Item ID", description="This is an item ID", gt=0, le=1000),
+    item_type: str = Query(..., title="Item Type", description="This is an item type", min_length=1, max_length=50),
+    item: ItemWithBody = Body(..., embed=True),
+    user: User = Body(None),
+    importance: int = Body(...),
+):
+    """
+    This is a POST request to create an item with body parameters
+
+    Args:
+        item_id (int): ID of the item, must be greater than 0 and less than or equal to 1000 (path parameter)
+        item_type (str): Type of the item, must be a string with min length 1 and max length 50 (query parameter)
+        item (ItemWithBody): Item details, must be provided in the body (embedded)
+        user (User | None): User details, optional (body)
+        importance (int): Importance level, must be provided in the body (body)
+    Returns:
+        dict: A dictionary containing the result of the item creation
+    """
+    result = {"item_id": item_id, "item_type": item_type}
+
+    if item:
+        item_dict = item.model_dump()
+        item_dict['total_price'] = item_dict['price'] + (item_dict['tax'] if item_dict['tax'] else item_dict['price'])
+        result['item'] = item_dict
+
+    if user:
+        user_dict = user.model_dump()
+        result['user'] = user_dict
+
+    if importance:
+        result['importance'] = importance
+    return {"result": result, "message": "Item created successfully with body parameters"}
+```
+
+---
+
+### 7.3 Explanation of Each Parameter
+
+- **item_id**:  
+  - Type: `int` (Path parameter)
+  - Constraints: Must be greater than 0 and less than or equal to 1000.
+  - Usage: Uniquely identifies the item being created.
+
+- **item_type**:  
+  - Type: `str` (Query parameter)
+  - Constraints: String with minimum length 1 and maximum length 50.
+  - Usage: Specifies the type/category of the item.
+
+- **item**:  
+  - Type: `ItemWithBody` (Body parameter, embedded)
+  - Usage: Contains the main details of the item (name, description, price, tax).
+  - Note: `embed=True` means the JSON body should have an `"item"` key.
+
+- **user**:  
+  - Type: `User` (Body parameter, optional)
+  - Usage: Optionally includes user information related to the item.
+
+- **importance**:  
+  - Type: `int` (Body parameter)
+  - Usage: Represents the importance level of the item.  
+  - **Importance**:  
+    - This parameter can be used to prioritize items, flag urgent items, or drive business logic based on its value.
+    - It is required and must be included in the request body.
+
+---
+
+**Summary:**
+- You can combine path, query, and multiple body parameters in a single FastAPI endpoint.
+- Use Pydantic models for structured data and `Body(...)` for explicit body parameters.
+- `importance` is a required integer in the body, useful for prioritization or business rules.
+- This approach allows for flexible and well-documented API endpoints that accept complex input.
+
+---

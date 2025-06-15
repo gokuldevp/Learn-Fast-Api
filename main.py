@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query, Path, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -208,3 +208,23 @@ async def create_item_with_body(
 Part 8: Body - Field
 
 """
+
+class UserWithField(BaseModel):
+    """User model for creating a user with field parameters
+    Attributes:
+        username (str): Username of the user
+        email (str): Email of the user
+    """
+    username: str = Field(..., title="Username", description="This is a username", min_length=1, max_length=50)
+    email: str = Field(..., title="Email", description="This is an email", pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$")
+
+@app.post("/create_user_with_field", description="This is a POST request to create a user with field parameters")
+async def create_user_with_field(user: UserWithField):
+    """This is a POST request to create a user with field parameters
+    Args:
+        user (UserWithField): User details, must be provided in the body
+    Returns:
+        dict: A dictionary containing the result of the user creation
+    """
+    user_dict = user.model_dump()
+    return {"user": user_dict, "message": "User created successfully with field parameters"}

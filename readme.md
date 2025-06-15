@@ -497,3 +497,77 @@ async def create_item_with_body(
 - This approach allows for flexible and well-documented API endpoints that accept complex input.
 
 ---
+
+# Part 8: Body - Field
+
+FastAPI and Pydantic allow you to add extra validation and metadata to individual fields in your models using the `Field` class. This is useful for enforcing constraints (like length or regex patterns) and improving the generated API documentation.
+
+### 8.1 Defining a Model with Field Parameters
+
+You can use `Field(...)` to specify requirements such as minimum/maximum length, regex patterns, titles, and descriptions for each field.
+
+```python
+from pydantic import BaseModel, Field
+
+class UserWithField(BaseModel):
+    """User model for creating a user with field parameters
+    Attributes:
+        username (str): Username of the user
+        email (str): Email of the user
+    """
+    username: str = Field(
+        ..., 
+        title="Username", 
+        description="This is a username", 
+        min_length=1, 
+        max_length=50
+    )
+    email: str = Field(
+        ..., 
+        title="Email", 
+        description="This is an email", 
+        pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    )
+```
+
+- `...` means the field is required.
+- `title` and `description` improve the OpenAPI docs.
+- `min_length` and `max_length` enforce string length.
+- `pattern` enforces a regex pattern (here, for a valid email).
+
+### 8.2 Endpoint Using the Model with Field Parameters
+
+```python
+@app.post("/create_user_with_field", description="This is a POST request to create a user with field parameters")
+async def create_user_with_field(user: UserWithField):
+    """
+    This is a POST request to create a user with field parameters
+
+    Args:
+        user (UserWithField): User details, must be provided in the body
+    Returns:
+        dict: A dictionary containing the result of the user creation
+    """
+    user_dict = user.model_dump()
+    return {"user": user_dict, "message": "User created successfully with field parameters"}
+```
+
+---
+
+### 8.3 Explanation
+
+- **username**:  
+  - Type: `str`
+  - Required: Yes
+  - Constraints: Minimum length 1, maximum length 50
+  - Metadata: Title and description for docs
+
+- **email**:  
+  - Type: `str`
+  - Required: Yes
+  - Constraints: Must match the provided regex pattern for emails
+  - Metadata: Title and description for docs
+
+**Summary:**
+- Use `Field(...)` in Pydantic models to add validation and documentation to individual fields.
+- This ensures your API receives well-structured and validated data, and the docs are clear for users.
